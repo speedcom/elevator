@@ -3,6 +3,11 @@
 ## Technology - Scala & AkkaFSM
 Elevator is a good example of Finithe State Machine that is why I decided to use AkkaFSM module.
 Both Scala and AkkaFSM's DSL make program really short and easy to reason about.
+Motivation:
+- concurrency (multiple working Elevators and Dispositor)
+- immutability
+- nice DSL (reasoning about program)
+- test coverage (unit + spec tests)
 
 ## Algorithm
 It consists of two main part:
