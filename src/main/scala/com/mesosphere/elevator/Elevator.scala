@@ -8,7 +8,9 @@ case class Elevator(id: Int, ref: ActorRef)
 
 object ElevatorProtocol {
   sealed trait ElevatorEvent
+  final case class GetStatus() extends ElevatorEvent
   final case class GetCost(floor: Int, direction: Direction) extends ElevatorEvent
+  final case class ElevatorStatus(currentFloor: Int, nextFloor: Option[Int]) extends ElevatorEvent
 
   sealed trait Request extends ElevatorEvent {
     def floor: Int
@@ -93,6 +95,10 @@ class ElevatorActor extends FSM[State, Data] {
       import scala.util._
       import scala.math._
       sender() ! ElevatorCost.Cost(abs(Random.nextInt() % 100)) // naive implementation - should based on direction and numbers of requests
+      stay()
+    case Event(status: GetStatus, ElevatorData(currentFloor, _, requests)) =>
+      val nextFloorOpt = if (requests.isEmpty) None else Some(requests.head.floor)
+      sender() ! ElevatorStatus(currentFloor, nextFloorOpt)
       stay()
   }
 
