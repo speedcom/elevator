@@ -74,9 +74,25 @@ class ElevatorActor extends FSM[State, Data] {
       stay() using data.copy(requests = requests + req)
   }
 
+  when(GoingPositive) { goingDirection(Positive) }
+  when(GoingNegative) { goingDirection(Negative) }
+
+  // TODO: implement direction change if its requested
+  def goingDirection(direction: Direction): StateFunction = {
+    val sameDirection = direction
+    val oppositeDirection = if (sameDirection == Positive) Negative else Positive
+
+    return {
+      case Event(req: Request, data @ ElevatorData(currentFloor, _, requests)) =>
+        stay() using data.copy(currentFloor, sameDirection, requests + req)
+    }
+  }
+
   whenUnhandled {
     case Event(getCost: GetCost, ElevatorData(_, _, requests)) =>
-      sender() ! ElevatorCost.Cost(requests.size) // naive implementation - should based on direction and numbers of requests
+      import scala.util._
+      import scala.math._
+      sender() ! ElevatorCost.Cost(abs(Random.nextInt() % 100)) // naive implementation - should based on direction and numbers of requests
       stay()
   }
 
