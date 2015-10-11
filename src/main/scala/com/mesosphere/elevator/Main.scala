@@ -1,6 +1,7 @@
 package com.mesosphere.elevator
 
 import akka.actor._
+import com.mesosphere.elevator.ElevatorActor._
 
 object Main extends App {
 
@@ -12,7 +13,7 @@ object Main extends App {
 
   val dispositorRef = actorSystem.actorOf(DispositorActor.props(elevators))
 
-  dispositorRef ! DispositorProtocol.Request(floor = 10)
+  dispositorRef ! DispositorProtocol.Request(floor = 10, direction = Negative)
 
   Thread.sleep(4000)
   actorSystem.shutdown()

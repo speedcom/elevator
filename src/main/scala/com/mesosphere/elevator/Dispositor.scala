@@ -1,10 +1,11 @@
 package com.mesosphere.elevator
 
 import akka.actor._
+import com.mesosphere.elevator.ElevatorActor.Direction
 
 object DispositorProtocol {
   sealed trait DispositorMsg
-  final case class Request(floor: Int) extends DispositorMsg
+  final case class Request(floor: Int, direction: Direction) extends DispositorMsg
 }
 object DispositorActor {
   def props(elevators: Seq[Elevator]) = Props(new DispositorActor(elevators))
@@ -24,22 +25,22 @@ class DispositorActor(private val elevators: Seq[Elevator]) extends Actor {
 
   val log = Logging(context.system, this)
 
-  def getCost(floor: Int) = ElevatorCost.getCost(floor) {
+  def getCost(floor: Int, direction: Direction) = ElevatorCost.getCost(floor, direction) {
     elevator =>
-      (elevator.ref ? ElevatorProtocol.GetCost(floor))
+      (elevator.ref ? ElevatorProtocol.GetCost(floor, direction))
         .mapTo[ElevatorCost.Cost]
         .map(cost => ElevatorCost(elevator, cost))
   }
 
   def receive = {
-    case DispositorProtocol.Request(floor) =>
+    case DispositorProtocol.Request(floor, direction) =>
       val futureTask = new DispositorProcessor()
-        .chooseElevator(elevators)(getCost(floor))
-        .map(el => (el, floor))
+        .chooseElevator(elevators)(getCost(floor, direction))
+        .map(el => (el, floor, direction))
       futureTask pipeTo self
-    case (Elevator(id, ref), floor: Int) =>
-      log.info(s"[id, floor] = [$id, $floor]")
-      ref ! ElevatorProtocol.Pickup(floor)
+    case (Elevator(id, ref), floor: Int, direction: Direction) =>
+      log.info(s"[id, floor, direction] = [$id, $floor, $direction]")
+      ref ! ElevatorProtocol.Pickup(floor, direction)
   }
 
 }
